@@ -1,10 +1,54 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './styles.css'
-import App from './App'
+import { Component, StrictMode } from "react";
+import type { ErrorInfo, ReactNode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./styles.css";
 
-createRoot(document.getElementById('root')!).render(
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("Agency rendering failed.", error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <main className="flex min-h-dvh items-center justify-center p-8">
+          <div className="panel max-w-md p-8">
+            <h1 className="text-xl font-black">The agency hit a rendering error.</h1>
+            <p className="mt-3 text-sm text-slate-400">
+              Reload to restore your most recent saved progress.
+            </p>
+            <button
+              className="primary-button mt-5"
+              onClick={() => window.location.reload()}
+            >
+              Reload agency
+            </button>
+          </div>
+        </main>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+const root = document.getElementById("root");
+if (!root) throw new Error("Missing application root.");
+
+createRoot(root).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
-)
+);
